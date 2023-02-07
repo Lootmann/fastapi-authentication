@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from db import ALGORITHM, SECRET_KEY, fake_users_db
-from models import User, UserInDB
+from models import User, UserCreate, UserInDB
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -82,3 +82,11 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+async def create_user(user: UserCreate) -> bool:
+    fake_users_db[user.username] = {**user.dict()}
+    fake_users_db[user.username].update(
+        {"hashed_password": get_password_hash(user.password)}
+    )
+    return True

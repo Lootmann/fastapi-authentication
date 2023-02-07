@@ -1,17 +1,26 @@
 from datetime import timedelta
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 
-from auths import (authenticate_user, create_access_token,
+from auths import (authenticate_user, create_access_token, create_user,
                    get_current_active_user)
 from db import ACCESS_TOKEN_EXPIRE_MINUTES, fake_users_db
-from models import Token, User
+from models import Token, User, UserCreate
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+@router.post("/signup", response_model=User)
+async def signup(user_body: UserCreate):
+    user = UserCreate(**user_body.dict())
+    await create_user(user)
+
+    return user
 
 
 @router.post("/token", response_model=Token)
